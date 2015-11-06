@@ -4,10 +4,15 @@
 """ Test of Tyme. """
 
 import os
-import core
 import configparser
 import unittest
+from unittest import mock
 import tempfile
+import io
+import pkgutil
+import tyme
+import core
+import notif
 
 
 class TestConfig(unittest.TestCase):
@@ -71,6 +76,82 @@ class TestConfig(unittest.TestCase):
             cfg.read()
         self.assertTrue('stderr' in cfg.sections.keys())
         self.assertEqual(len(cfg.sections['stderr']), 0)
+
+
+class TestNotification(unittest.TestCase):
+    """ Test of all notification class. """
+
+    def test_notification(self):
+        """ Test of notification class inside 'notif'. """
+        modules = {
+            modname: importer.find_module(modname).load_module(modname)
+            for importer, modname, ispkg in pkgutil.iter_modules(notif.__path__)
+            }
+        for modname, m in modules.items():
+
+            # Check the notification class name and number
+            t = [e for e in dir(m) if e.startswith('Notification')]
+            self.assertEqual(len(t), 1, "The file '%s.py' must contain only one class with a name beginning with 'Notification'" % modname)
+
+            # Check the presence of methods 'send_ok' and 'send_error'
+            cls = m.__dict__[t[0]]  # link to the class object
+            inst = cls(**{'spam': 'AzerTY', 'egg': 'NbvFhk'})  # inject dict
+            self.assertIn('send_ok', dir(inst),
+                          "A 'send_ok' must be present in the '%s' class" % cls.__name__)
+            self.assertIn('send_error', dir(inst),
+                          "A 'send_error' must be present in the '%s' class" % cls.__name__)
+            self.assertEqual(inst.spam, 'AzerTY')
+            self.assertEqual(inst.egg, 'NbvFhk')
+
+
+class TestTyme(unittest.TestCase):
+    """ Test of Tyme class. """
+
+    def create_config(self, d, outdir):
+        """ Create configuration file.
+        :param d: {'section': {'key1': 'option1', ...}}
+        :param outdir: path of output directory.
+        """
+        cfgp = configparser.ConfigParser()
+        cfgp.read_dict(d)
+        with open(os.path.join(outdir, 'tyme.cfg'), 'w') as f:
+            cfgp.write(f)
+
+    def test_tyme_ok(self):
+        """ Test with a success command. """
+        patched_stdout = mock.patch('sys.stdout', new_callable=io.StringIO)
+        patched_stderr = mock.patch('sys.stderr', new_callable=io.StringIO)
+        with patched_stderr as stderr, patched_stdout as stdout:
+            with tempfile.TemporaryDirectory() as tmpdir:
+                os.chdir(tmpdir)
+                self.create_config({'stderr': {}}, tmpdir)
+                t = tyme.Tyme()
+                self.assertEqual(list(t.notifs.keys()), ['stderr'])
+                rc = t.run("exit")
+                self.assertEqual(rc, 0)
+        stdout.seek(0)
+        stderr.seek(0)
+        self.assertEqual(len(stdout.read()), 0)
+        self.assertEqual(stderr.read().strip(),
+                         "[tyme: command `exit` executed successfully]")
+
+    def test_tyme_error(self):
+        """ Test with a error command. """
+        patched_stdout = mock.patch('sys.stdout', new_callable=io.StringIO)
+        patched_stderr = mock.patch('sys.stderr', new_callable=io.StringIO)
+        with patched_stderr as stderr, patched_stdout as stdout:
+            with tempfile.TemporaryDirectory() as tmpdir:
+                os.chdir(tmpdir)
+                self.create_config({'stderr': {}}, tmpdir)
+                t = tyme.Tyme()
+                self.assertEqual(list(t.notifs.keys()), ['stderr'])
+                rc = t.run("exit 9")
+                self.assertEqual(rc, 9)
+        stdout.seek(0)
+        stderr.seek(0)
+        self.assertEqual(len(stdout.read()), 0)
+        self.assertEqual(stderr.read().strip(),
+                         "[tyme: command `exit 9` failed (error no 9)]")
 
 
 if __name__ == '__main__':

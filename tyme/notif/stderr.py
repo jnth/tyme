@@ -20,6 +20,8 @@ from sys import stderr
 
 class NotificationStderr(object):
     def __init__(self, **kwargs):
+        for k, v in kwargs.items():  # save kwargs into the class
+            self.__dict__[k] = v
         self.cmd = None  # will be completed later...
 
     def send_ok(self):
@@ -29,4 +31,5 @@ class NotificationStderr(object):
     def send_error(self, errno):
         stderr.write("[tyme: command `{cmd}` failed (error no {e})]\n".format(
             cmd=self.cmd, e=errno))
+
 

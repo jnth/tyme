@@ -20,8 +20,8 @@ import requests
 
 class NotificationStderr(object):
     def __init__(self, **kwargs):
-        self.user_key = kwargs['user_key']
-        self.app_token = kwargs['app_token']
+        for k, v in kwargs.items():  # save kwargs into the class
+            self.__dict__[k] = v
         self.url_post = "https://api.pushover.net/1/messages.json"
         self.cmd = None  # will be completed later...
 
