@@ -13,35 +13,35 @@ __author__ = 'jnth'
 
 import os
 import sys
+import logging
 import subprocess
 import configparser
 import pkgutil
 import notif
+import core
 
 
-# Open configuration
-#  1st: 'tyme.cfg' in current directory
-#  2nd: '.tyme.cfg' in $HOME directory
-#  3rd: basic configuration by default
-if os.path.isfile('tyme.cfg'):
-    fncfg = 'tyme.cfg'
-elif os.path.isfile(os.path.join(os.environ['HOME'], '.tyme.cfg')):
-    fncfg = os.path.join(os.environ['HOME'], '.tyme.cfg')
-else:
-    pass
+# Debug mode if TYME_DEBUG is set in environnement variable
+loglvl = logging.DEBUG if 'TYME_DEBUG' in os.environ else logging.WARNING
 
+# Log
+logging.basicConfig(level=loglvl,
+                    format="[%(asctime)s] %(levelname)8s | %(message)s")
+log = logging  # alias
+log.info("starting tyme.py")
 
 # Read configuration and get section names
-cfg = configparser.ConfigParser()
-cfg.read(fncfg)
-sections = cfg.sections()
+cfg = core.Config()
+cfg.read()
+log.info("selected config file : %s" % cfg.selected_cfgfile)
 
 # Load submodule
 modules = {
     modname: importer.find_module(modname).load_module(modname)
     for importer, modname, ispkg in pkgutil.iter_modules(notif.__path__)
-    if modname in sections
+    if modname in cfg.sections.keys()
 }
+log.info("load submodule : %s" % list(modules.keys()))
 
 # Create notification instance for each activated submodule
 notifs = dict()
@@ -57,7 +57,7 @@ for modname, m in modules.items():
                            "'Notification...' class").format(**locals()))
 
     cls = m.__dict__[t[0]]  # class
-    kw = dict(cfg[modname].items())  # dict from configuration
+    kw = cfg.sections[modname]  # dict from configuration
     notifs[modname] = cls(**kw)  # new instance
 
 
@@ -68,15 +68,22 @@ if not cmd:  # test with 'echo'
     cmd = "echo 'test of tyme'"
 else:
     cmd = " ".join(cmd)
+log.info("command to run : %s" % cmd)
 
 # Run command and notify
+log.debug("start running command...")
 proc = subprocess.run(cmd, shell=True)
+log.debug("end of command with return code %i" % proc.returncode)
+
 for modname, notif in notifs.items():
     notif.cmd = cmd  # add command name inside instance
     if proc.returncode == 0:
         notif.send_ok()
+        log.info("success notification '%s' done" % modname)
     else:
         notif.send_error(proc.returncode)
+        log.info("error notification '%s' done" % modname)
 
 # Exit with the command return code
+log.info("end of tyme.py")
 sys.exit(proc.returncode)

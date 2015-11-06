@@ -33,6 +33,8 @@ Each options inside a section will be passed to create an instance of the notifi
 
 ## Note
 
+A debug mode (verbose mode) can be activated if you set a `TYME_DEBUG` environnement variable.
+
 This script is under developpement...  
 It's missing a complete documentation and tests with different python version and OS. See [TODO](TODO.md) file.
 
