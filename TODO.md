@@ -2,8 +2,8 @@
 
  - [ ] Check compatibility with Windows
  - [ ] Check compatibility for Python 2.7, 3.x
- - [ ] Add tests in Linux and Windows
- - [ ] Add documentation
+ - [x] Add tests
+ - [x] Add documentation
  - [ ] Add setup.py 
  - [ ] Add requirements.txt
 

@@ -26,7 +26,8 @@ loglvl = logging.DEBUG if 'TYME_DEBUG' in os.environ else logging.WARNING
 
 # Log
 logging.basicConfig(level=loglvl,
-                    format="[%(asctime)s] %(levelname)8s | %(message)s")
+                    format="[%(asctime)s] %(levelname)8s | %(message)s",
+                    datefmt="%Y-%m-%d %H:%M:%S")
 log = logging  # alias
 log.info("starting tyme.py")
 
