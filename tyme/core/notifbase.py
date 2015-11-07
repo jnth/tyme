@@ -4,10 +4,6 @@
 """ __Tyme__ : notify me when a command is finished. """
 
 
-from core import BaseNotification
-from sys import stderr
-
-
 # The notification class name must start with `Notification`.
 # This class must have :
 #   - an `__init__` function with a **kwargs argument.
@@ -19,16 +15,15 @@ from sys import stderr
 # will be passed in the `__init__` function as string kwargs.
 
 
-class NotificationStderr(BaseNotification):
+class BaseNotification(object):
     def __init__(self, **kwargs):
-        BaseNotification.__init__(self, **kwargs)  # do not change this line
+        for k, v in kwargs.items():  # save kwargs into the class
+            self.__dict__[k] = v
+        self.cmd = None  # will be completed later...
 
     def send_ok(self):
-        stderr.write("[tyme: command `{cmd}` executed successfully]\n".format(
-            cmd=self.cmd))
+        pass
 
     def send_error(self, errno):
-        stderr.write("[tyme: command `{cmd}` failed (error no {e})]\n".format(
-            cmd=self.cmd, e=errno))
-
+        pass
 

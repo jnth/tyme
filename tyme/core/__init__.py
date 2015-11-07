@@ -2,4 +2,5 @@
 # coding: utf-8
 
 from core.config import Config
+from core.notifbase import BaseNotification
 

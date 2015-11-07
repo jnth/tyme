@@ -26,7 +26,7 @@ But, you can create a configuration file to use specific notification (push with
 
 If any configuration file is found, it will use stderr to notify the end of the task.
 
-Each section inside the configuration file represents a notification process. A corresponding python file must be present inside the `notif` directory with a specific class name and methods.
+Each section inside the configuration file represents a notification process. A corresponding python file must be present inside the `notif` directory with a specific class name (start with `Notification`) and methods (`send_ok` and `send_error`).
 
 Each options inside a section will be passed to create an instance of the notification class. This is used to define login, password or keys (see `notif/pushover.py` for example).
 

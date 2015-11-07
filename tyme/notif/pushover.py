@@ -4,6 +4,7 @@
 """ __Tyme__ : notify me when a command is finished. """
 
 
+from core import BaseNotification
 import requests
 
 
@@ -18,12 +19,10 @@ import requests
 # will be passed in the `__init__` function as string kwargs.
 
 
-class NotificationStderr(object):
+class NotificationStderr(BaseNotification):
     def __init__(self, **kwargs):
-        for k, v in kwargs.items():  # save kwargs into the class
-            self.__dict__[k] = v
+        BaseNotification.__init__(self, **kwargs)  # do not change this line
         self.url_post = "https://api.pushover.net/1/messages.json"
-        self.cmd = None  # will be completed later...
 
     def push(self, title, message):
         """ Send push.
